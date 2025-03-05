@@ -34,10 +34,18 @@ export default function ImagePickerComponent() {
         const photo = await camera.takePictureAsync({
           quality: 0.7,
           exif: false,
+          base64: true,
         });
+        
+        if (!photo || !photo.uri) {
+          throw new Error('Failed to capture photo');
+        }
+        
+        console.log('Photo captured:', photo.uri);
         handleImageSelected(photo.uri);
       } catch (error) {
         console.error('Error taking picture:', error);
+        alert('Failed to take picture. Please try again.');
       } finally {
         setIsCapturing(false);
       }
@@ -62,11 +70,24 @@ export default function ImagePickerComponent() {
   };
 
   const handleImageSelected = (uri: string) => {
+    if (!uri) {
+      console.error('No image URI provided');
+      alert('Failed to process image. Please try again.');
+      return;
+    }
+    
+    console.log('Handling image with URI:', uri);
     setShowCamera(false);
-    router.push({
-      pathname: "/(tabs)/results",
-      params: { imageUri: uri }
-    });
+    
+    try {
+      router.push({
+        pathname: "/(tabs)/results",
+        params: { imageUri: uri }
+      });
+    } catch (error) {
+      console.error('Error navigating to results:', error);
+      alert('Failed to process image. Please try again.');
+    }
   };
 
   if (hasCameraPermission === null || hasGalleryPermission === null) {
