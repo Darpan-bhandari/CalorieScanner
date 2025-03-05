@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Camera, CameraType } from 'expo-camera';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system';
 
 const WINDOW_HEIGHT = Dimensions.get('window').height;
 const CAPTURE_SIZE = Math.floor(WINDOW_HEIGHT * 0.08);
@@ -12,7 +13,7 @@ export default function ImagePickerComponent() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [hasGalleryPermission, setHasGalleryPermission] = useState<boolean | null>(null);
   const [showCamera, setShowCamera] = useState(false);
-  const [camera, setCamera] = useState<Camera | null>(null);
+  const [camera, setCamera] = useState<any | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
 
   useEffect(() => {
@@ -40,9 +41,22 @@ export default function ImagePickerComponent() {
         if (!photo || !photo.uri) {
           throw new Error('Failed to capture photo');
         }
+
+        // Ensure the directory exists
+        const directory = `${FileSystem.cacheDirectory}photos/`;
+        await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
         
-        console.log('Photo captured:', photo.uri);
-        handleImageSelected(photo.uri);
+        // Generate a new filename
+        const filename = `${directory}${Date.now()}.jpg`;
+        
+        // Copy the photo to our app's cache directory
+        await FileSystem.copyAsync({
+          from: photo.uri,
+          to: filename
+        });
+        
+        console.log('Photo saved to:', filename);
+        handleImageSelected(filename);
       } catch (error) {
         console.error('Error taking picture:', error);
         alert('Failed to take picture. Please try again.');
@@ -62,30 +76,47 @@ export default function ImagePickerComponent() {
       });
 
       if (!result.canceled) {
-        handleImageSelected(result.assets[0].uri);
+        // Copy selected image to app's cache directory
+        const directory = `${FileSystem.cacheDirectory}photos/`;
+        await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
+        const filename = `${directory}${Date.now()}.jpg`;
+        
+        await FileSystem.copyAsync({
+          from: result.assets[0].uri,
+          to: filename
+        });
+        
+        handleImageSelected(filename);
       }
     } catch (error) {
       console.error('Error picking image:', error);
+      alert('Failed to select image. Please try again.');
     }
   };
 
-  const handleImageSelected = (uri: string) => {
+  const handleImageSelected = async (uri: string) => {
     if (!uri) {
       console.error('No image URI provided');
       alert('Failed to process image. Please try again.');
       return;
     }
     
-    console.log('Handling image with URI:', uri);
-    setShowCamera(false);
-    
     try {
+      // Verify the file exists
+      const fileInfo = await FileSystem.getInfoAsync(uri);
+      if (!fileInfo.exists) {
+        throw new Error('Image file not found');
+      }
+      
+      console.log('Image file exists:', fileInfo);
+      setShowCamera(false);
+      
       router.push({
         pathname: "/(tabs)/results",
         params: { imageUri: uri }
       });
     } catch (error) {
-      console.error('Error navigating to results:', error);
+      console.error('Error handling image:', error);
       alert('Failed to process image. Please try again.');
     }
   };
