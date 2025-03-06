@@ -3,6 +3,7 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { analyzeImage, getNutritionInfo } from '../../utils/api';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface NutritionInfo {
   name: string;
@@ -25,6 +26,37 @@ export default function ResultsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [nutritionInfo, setNutritionInfo] = useState<NutritionInfo | null>(null);
   const [detectedLabels, setDetectedLabels] = useState<string[]>([]);
+
+  const updateNutritionData = async (calories: number) => {
+    try {
+      // Get current nutrition data
+      const savedGoals = await AsyncStorage.getItem('nutritionGoals');
+      if (!savedGoals) {
+        console.error('No nutrition goals found');
+        return;
+      }
+
+      const goals = JSON.parse(savedGoals);
+      
+      // Update calories consumed
+      goals.calories.current += calories;
+      
+      // Calculate macros based on typical fruit composition (rough estimates)
+      const carbsGrams = Math.round((calories * 0.9) / 4); // 90% carbs
+      const proteinGrams = Math.round((calories * 0.05) / 4); // 5% protein
+      const fatGrams = Math.round((calories * 0.05) / 9); // 5% fat
+      
+      goals.carbs.current += carbsGrams;
+      goals.protein.current += proteinGrams;
+      goals.fat.current += fatGrams;
+
+      // Save updated nutrition data
+      await AsyncStorage.setItem('nutritionGoals', JSON.stringify(goals));
+      console.log('Updated nutrition data with fruit calories:', goals);
+    } catch (error) {
+      console.error('Error updating nutrition data:', error);
+    }
+  };
 
   useEffect(() => {
     const processImage = async () => {
@@ -64,6 +96,11 @@ export default function ResultsScreen() {
           setNutritionInfo(nutritionData.items[0]);
         } else {
           setError('No nutrition information found for ' + fruitName);
+        }
+        
+        // Update nutrition tracking with the calories from the scanned fruit
+        if (nutritionData.items && nutritionData.items.length > 0) {
+          await updateNutritionData(nutritionData.items[0].calories);
         }
       } catch (err) {
         setError('Error processing image');

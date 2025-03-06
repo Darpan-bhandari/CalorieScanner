@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -37,6 +38,20 @@ export default function TabLayout() {
         options={{
           title: 'Results',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="chart.bar.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="nutrition"
+        options={{
+          title: 'Nutrition',
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="food-apple" size={28} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="calculator"
+        options={{
+          title: 'Calculator',
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="calculator" size={28} color={color} />,
         }}
       />
     </Tabs>
