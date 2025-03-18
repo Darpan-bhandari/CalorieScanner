@@ -292,7 +292,7 @@ export default function NutritionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#a5d6e4',
   },
   content: {
     flex: 1,

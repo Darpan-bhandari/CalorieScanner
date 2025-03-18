@@ -237,7 +237,7 @@ export default function ResultsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#fff',
   },
   emptyContainer: {
     flex: 1,
@@ -306,13 +306,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: '#000',
     textTransform: 'capitalize',
   },
+  //Calories & Serving
   mainNutrition: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#2d2d2d',
+    backgroundColor: '#eaeff9',
     borderRadius: 15,
     padding: 20,
     marginBottom: 20,
@@ -330,8 +331,9 @@ const styles = StyleSheet.create({
     color: '#9e9e9e',
     marginTop: 4,
   },
+  //Macro Nutrients
   macrosContainer: {
-    backgroundColor: '#2d2d2d',
+    backgroundColor: '#eaeff9',
     borderRadius: 15,
     padding: 20,
     marginBottom: 20,
@@ -339,7 +341,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#000',
     marginBottom: 15,
   },
   macroRow: {
@@ -359,8 +361,9 @@ const styles = StyleSheet.create({
     color: '#9e9e9e',
     marginTop: 4,
   },
+  // Additional Information
   detailsContainer: {
-    backgroundColor: '#2d2d2d',
+    backgroundColor: '#eaeff9',
     borderRadius: 15,
     padding: 20,
   },
@@ -378,7 +381,7 @@ const styles = StyleSheet.create({
   },
   detailValue: {
     fontSize: 16,
-    color: '#ffffff',
+    color: '#000',
     fontWeight: '500',
   },
 });

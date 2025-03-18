@@ -6,8 +6,8 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1a1a1a" />
       <View style={styles.header}>
-        <Text style={styles.title}>Fruit Scanner</Text>
-        <Text style={styles.subtitle}>Scan any fruit to get nutrition info</Text>
+        <Text style={styles.title}>Calorie Counter+</Text>
+        <Text style={styles.subtitle}>Log your meals to track nutrition info</Text>
       </View>
       <View style={styles.pickerContainer}>
         <ImagePickerComponent />
@@ -19,7 +19,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#fff',
   },
   header: {
     padding: 20,
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: '#000',
     marginBottom: 8,
   },
   subtitle: {

@@ -36,8 +36,10 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Allow CalorieScanner to access your camera to scan fruits.",
-        "NSPhotoLibraryUsageDescription": "Allow CalorieScanner to access your photos to analyze fruits."
-      }
+        "NSPhotoLibraryUsageDescription": "Allow CalorieScanner to access your photos to analyze fruits.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.anonymous.calorieproject"
     },
     "android": {
       "adaptiveIcon": {
@@ -48,7 +50,8 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -58,6 +61,14 @@
     },
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "4fd68502-abab-4ed6-882e-4704b126452b"
+      }
     }
   }
 }

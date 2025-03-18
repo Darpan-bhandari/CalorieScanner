@@ -1,20 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Platform, Dimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, CameraType } from 'expo-camera';
-import { router } from 'expo-router';
+import { Camera } from 'expo-camera';
+import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
 
 const WINDOW_HEIGHT = Dimensions.get('window').height;
 const CAPTURE_SIZE = Math.floor(WINDOW_HEIGHT * 0.08);
 
-export default function ImagePickerComponent() {
+export default function ImageClickerComponent() {
+  const router = useRouter();
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [hasGalleryPermission, setHasGalleryPermission] = useState<boolean | null>(null);
   const [showCamera, setShowCamera] = useState(false);
-  const [camera, setCamera] = useState<any | null>(null);
+  const [cameraType, setCameraType] = useState(Camera.Constants.Type.back);
   const [isCapturing, setIsCapturing] = useState(false);
+  const cameraRef = useRef<Camera>(null);
 
   useEffect(() => {
     (async () => {
@@ -29,10 +31,10 @@ export default function ImagePickerComponent() {
   }, []);
 
   const takePicture = async () => {
-    if (camera && !isCapturing) {
+    if (cameraRef.current && !isCapturing) {
       try {
         setIsCapturing(true);
-        const photo = await camera.takePictureAsync({
+        const photo = await cameraRef.current.takePictureAsync({
           quality: 0.7,
           exif: false,
           base64: true,
@@ -112,9 +114,10 @@ export default function ImagePickerComponent() {
       setShowCamera(false);
       
       router.push({
-        pathname: "/(tabs)/results",
-        params: { imageUri: uri }
+        pathname: "/results",
+        query: { imageUri: uri }
       });
+      
     } catch (error) {
       console.error('Error handling image:', error);
       alert('Failed to process image. Please try again.');
@@ -142,8 +145,8 @@ export default function ImagePickerComponent() {
       <View style={styles.container}>
         <Camera
           style={styles.camera}
-          
-          ref={(ref) => setCamera(ref)}
+          type={cameraType}
+          ref={cameraRef}
         >
           <View style={styles.overlay}>
             <View style={styles.controls}>
