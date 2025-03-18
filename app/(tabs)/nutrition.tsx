@@ -12,6 +12,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 
+interface TodayItem {
+  id: string;
+  name: string;
+  calories: number;
+  icon: string;
+  color: string;
+}
+
 export default function NutritionScreen() {
   const [value] = useState(new Date());
   const [nutritionData, setNutritionData] = useState({
@@ -33,43 +41,16 @@ export default function NutritionScreen() {
     fat: {
       current: 0,
       goal: 0,
-    },
-    meals: [
-      {
-        id: '1',
-        name: 'Breakfast',
-        consumed: 0,
-        goal: 0,
-        icon: 'coffee',
-      },
-      {
-        id: '2',
-        name: 'Lunch',
-        consumed: 0,
-        goal: 0,
-        icon: 'food',
-      },
-      {
-        id: '3',
-        name: 'Dinner',
-        consumed: 0,
-        goal: 0,
-        icon: 'food-variant',
-      },
-      {
-        id: '4',
-        name: 'Snacks',
-        consumed: 0,
-        goal: 0,
-        icon: 'fruit-cherries',
-      },
-    ],
+    }
   });
+
+  const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
 
   // Load goals whenever the screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       loadNutritionGoals();
+      loadTodayItems();
     }, [])
   );
 
@@ -85,21 +66,24 @@ export default function NutritionScreen() {
         setNutritionData(prevData => {
           const updatedData = {
             ...prevData,
-            calories: goals.calories,
-            carbs: goals.carbs,
-            protein: goals.protein,
-            fat: goals.fat,
-            eaten: goals.calories.current || 0,
-            remaining: goals.calories.goal - (goals.calories.current || 0),
-            meals: prevData.meals.map(meal => ({
-              ...meal,
-              goal: Math.round(goals.calories.goal * (
-                meal.id === '1' ? 0.25 : // Breakfast 25%
-                meal.id === '2' ? 0.35 : // Lunch 35%
-                meal.id === '3' ? 0.30 : // Dinner 30%
-                0.10 // Snacks 10%
-              )),
-            })),
+            calories: {
+              current: Math.round(goals.calories.current || 0),
+              goal: Math.round(goals.calories.goal || 0)
+            },
+            carbs: {
+              current: Math.round(goals.carbs.current || 0),
+              goal: Math.round(goals.carbs.goal || 0)
+            },
+            protein: {
+              current: Math.round(goals.protein.current || 0),
+              goal: Math.round(goals.protein.goal || 0)
+            },
+            fat: {
+              current: Math.round(goals.fat.current || 0),
+              goal: Math.round(goals.fat.goal || 0)
+            },
+            eaten: Math.round(goals.calories.current || 0),
+            remaining: Math.round(goals.calories.goal - (goals.calories.current || 0)),
           };
           console.log('Updated nutrition data:', updatedData);
           return updatedData;
@@ -107,6 +91,24 @@ export default function NutritionScreen() {
       }
     } catch (error) {
       console.error('Error loading nutrition goals:', error);
+    }
+  };
+
+  const loadTodayItems = async () => {
+    try {
+      const savedItems = await AsyncStorage.getItem('todayItems');
+      if (savedItems) {
+        setTodayItems(JSON.parse(savedItems));
+      } else {
+        // Default items for testing
+        setTodayItems([
+          { id: '1', name: 'Apple', calories: 95, icon: 'food-apple', color: '#FFA07A' },
+          { id: '2', name: 'Chicken Salad', calories: 350, icon: 'food', color: '#CCCCFF' },
+          { id: '3', name: 'Greek Yogurt', calories: 130, icon: 'cup', color: '#FFA07A' },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error loading today items:', error);
     }
   };
 
@@ -231,43 +233,34 @@ export default function NutritionScreen() {
       
       {/* Meal List */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Today's Meals</Text>
-        {nutritionData.meals.map((meal) => (
-          <View key={meal.id} style={styles.mealItem}>
-            <View style={styles.mealIconContainer}>
-              <View style={styles.iconCircle}>
-                {getMealIcon(meal.icon)}
+        <Text style={styles.cardTitle}>Today's Food</Text>
+        <ScrollView style={styles.scrollView}>
+          {todayItems.map((item) => (
+            <View key={item.id} style={styles.foodItemCard}>
+              <View style={styles.foodItemLeft}>
+                <MaterialCommunityIcons 
+                  name={item.icon} 
+                  size={24} 
+                  color={item.color} 
+                  style={styles.foodIcon}
+                />
+                <Text style={styles.foodName}>{item.name}</Text>
+              </View>
+              <View style={styles.foodItemRight}>
+                <Text style={styles.calorieText}>{item.calories}</Text>
+                <Text style={styles.calorieUnit}>cal</Text>
               </View>
             </View>
-            
-            <View style={styles.mealInfo}>
-              <Text style={styles.mealName}>{meal.name}</Text>
-              <View style={styles.mealProgress}>
-                <View style={styles.progressBarBackground}>
-                  <View 
-                    style={[
-                      styles.progressBarFill,
-                      { 
-                        width: `${getProgressWidth(meal.consumed, meal.goal)}%`,
-                        backgroundColor: '#4CAF50'
-                      }
-                    ]} 
-                  />
-                </View>
-                <Text style={styles.calorieText}>
-                  {meal.consumed} / {meal.goal} Cal
-                </Text>
-              </View>
-            </View>
-            
-            <TouchableOpacity 
-              style={styles.addButton}
-              onPress={() => handleAddMeal(meal.id)}
-            >
-              <MaterialCommunityIcons name="plus" size={24} color="#ffffff" />
-            </TouchableOpacity>
-          </View>
-        ))}
+          ))}
+        </ScrollView>
+        
+        <TouchableOpacity 
+          style={styles.addFoodButton}
+          onPress={() => {/* TODO: Implement add food */}}
+        >
+          <MaterialCommunityIcons name="plus" size={24} color="#ffffff" />
+          <Text style={styles.addFoodText}>Add Food</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -393,46 +386,65 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#9e9e9e',
   },
-  mealItem: {
+  foodItemCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#3d3d3d',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    padding: 16,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  mealIconContainer: {
-    marginRight: 4,
-  },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#1a1a1a',
-    justifyContent: 'center',
+  foodItemLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  mealInfo: {
     flex: 1,
-    gap: 8,
   },
-  mealName: {
+  foodIcon: {
+    marginRight: 12,
+  },
+  foodName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
+    fontWeight: '500',
+    color: '#333333',
   },
-  mealProgress: {
-    gap: 4,
+  foodItemRight: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
   },
   calorieText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+    marginRight: 4,
+  },
+  calorieUnit: {
     fontSize: 14,
     color: '#9e9e9e',
   },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#4CAF50',
-    justifyContent: 'center',
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  addFoodButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4CAF50',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  addFoodText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });

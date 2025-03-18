@@ -52,6 +52,25 @@ export default function ResultsScreen() {
 
       // Save updated nutrition data
       await AsyncStorage.setItem('nutritionGoals', JSON.stringify(goals));
+
+      // Update today's food items
+      if (nutritionInfo) {
+        const savedItems = await AsyncStorage.getItem('todayItems');
+        let todayItems = savedItems ? JSON.parse(savedItems) : [];
+        
+        // Add the new item
+        todayItems.push({
+          id: Date.now().toString(),
+          name: nutritionInfo.name,
+          calories: nutritionInfo.calories,
+          icon: 'fruit-cherries',
+          color: '#FFA07A'
+        });
+
+        // Save updated items
+        await AsyncStorage.setItem('todayItems', JSON.stringify(todayItems));
+      }
+
       console.log('Updated nutrition data with fruit calories:', goals);
     } catch (error) {
       console.error('Error updating nutrition data:', error);
