@@ -84,42 +84,54 @@ export default function ResultsScreen() {
         const visionResult = await analyzeImage(imageUri as string);
         console.log('Vision API Response:', JSON.stringify(visionResult, null, 2));
         
+        // First try to get fruit from localizedObjectAnnotations
         let fruitName = visionResult.responses[0].localizedObjectAnnotations?.[0]?.name;
         
+        // If no fruit found in objects, check labels more thoroughly
         if (!fruitName) {
           const fruitLabels = visionResult.responses[0].labelAnnotations
             .filter((label: any) => {
               const desc = label.description.toLowerCase();
+              // Expanded list of common fruits
+              const commonFruits = [
+                'apple', 'banana', 'orange', 'grape', 'mango', 'citrus',
+                'pear', 'strawberry', 'blueberry', 'raspberry', 'kiwi',
+                'peach', 'plum', 'apricot', 'cherry', 'lemon', 'lime',
+                'pineapple', 'watermelon', 'melon', 'fig', 'pomegranate'
+              ];
               return !['fruit', 'food', 'produce', 'ingredient'].includes(desc) &&
-                     (desc.includes('fruit') || 
-                      ['apple', 'banana', 'orange', 'grape', 'mango', 'citrus'].includes(desc));
+                     (desc.includes('fruit') || commonFruits.some(fruit => desc.includes(fruit)));
             })
             .map((label: any) => label.description);
           
           fruitName = fruitLabels[0];
         }
 
-        setDetectedLabels(visionResult.responses[0].labelAnnotations
-          .map((label: any) => label.description));
+        // Store all detected labels for debugging
+        const allLabels = visionResult.responses[0].labelAnnotations
+          .map((label: any) => label.description);
+        setDetectedLabels(allLabels);
+        console.log('All detected labels:', allLabels);
 
         if (!fruitName) {
           setError('No specific fruit detected in the image');
+          setLoading(false);
           return;
         }
 
-        console.log('Querying nutrition for:', fruitName);
+        console.log('Detected fruit:', fruitName);
         const nutritionData = await getNutritionInfo(fruitName);
         console.log('Nutrition API Response:', JSON.stringify(nutritionData, null, 2));
         
         if (nutritionData.items && nutritionData.items.length > 0) {
-          setNutritionInfo(nutritionData.items[0]);
+          const nutritionItem = nutritionData.items[0];
+          setNutritionInfo(nutritionItem);
+          
+          // Only update nutrition data if we successfully got nutrition info
+          await updateNutritionData(nutritionItem.calories);
+          setError(null); // Clear any previous errors
         } else {
           setError('No nutrition information found for ' + fruitName);
-        }
-        
-        // Update nutrition tracking with the calories from the scanned fruit
-        if (nutritionData.items && nutritionData.items.length > 0) {
-          await updateNutritionData(nutritionData.items[0].calories);
         }
       } catch (err) {
         setError('Error processing image');

@@ -115,8 +115,34 @@ export default function CalorieCalculator() {
     sheet.current.open();
   };
 
+  const resetCalculator = async () => {
+    // Reset form fields
+    setAge('');
+    setHeight('');
+    setWeight('');
+    setGender('male');
+    setActivityLevel('sedentary');
+    setResult(null);
+
+    // Reset nutrition goals in AsyncStorage
+    try {
+      const defaultNutritionGoals = {
+        calories: { goal: 0, current: 0 },
+        carbs: { goal: 0, current: 0 },
+        protein: { goal: 0, current: 0 },
+        fat: { goal: 0, current: 0 }
+      };
+      await AsyncStorage.setItem('nutritionGoals', JSON.stringify(defaultNutritionGoals));
+      await AsyncStorage.setItem('todayItems', JSON.stringify([]));
+      console.log('Calculator and nutrition data reset successfully');
+    } catch (error) {
+      console.error('Error resetting nutrition goals:', error);
+      alert('Failed to reset nutrition data');
+    }
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#e8ecf4' }}>
+    <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
           <View style={styles.header}>
@@ -185,7 +211,7 @@ export default function CalorieCalculator() {
             </View>
 
             {/*Basic Metrics Container*/}
-            <View style={styles.metricsContainerrrrrrrr}>
+            <View style={styles.metricsContainer}>
               <View style={styles.input}>
                 <Text style={styles.inputLabel}>Age</Text>
                 <TextInput
@@ -231,19 +257,19 @@ export default function CalorieCalculator() {
                   <Pressable
                     key={key}
                     style={[
-                      styles.activityButton,
+                      styles.activityLevelButton,
                       activityLevel === key && styles.activityButtonActive,
                     ]}
                     onPress={() => setActivityLevel(key)}>
-                    <View style={styles.activityContent}>
+                    <View style={styles.activityLevelText}>
                       <Text
                         style={[
-                          styles.activityLabel,
+                          styles.activityLevelLabel,
                           activityLevel === key && styles.activityLabelActive,
                         ]}>
                         {label}
                       </Text>
-                      <Text style={styles.activityDescription}>
+                      <Text style={styles.activityLevelDesc}>
                         {description}
                       </Text>
                     </View>
@@ -252,7 +278,6 @@ export default function CalorieCalculator() {
                         name="check"
                         size={24}
                         color="#075eec"
-                        
                       />
                     )}
                   </Pressable>
@@ -261,10 +286,16 @@ export default function CalorieCalculator() {
             </View>
 
             <View style={styles.formAction}>
-              <TouchableOpacity onPress={calculateBMR}>
-                <View style={styles.btn}>
-                  <Text style={styles.btnText}>Calculate BMR</Text>
-                </View>
+              <TouchableOpacity
+                onPress={calculateBMR}
+                style={styles.calculateButton}>
+                <Text style={styles.calculateButtonText}>Calculate BMR</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={resetCalculator}
+                style={styles.resetButton}>
+                <MaterialCommunityIcons name="refresh" size={20} color="#fff" />
+                <Text style={styles.resetButtonText}>Reset</Text>
               </TouchableOpacity>
             </View>
 
@@ -281,7 +312,7 @@ export default function CalorieCalculator() {
       </ScrollView>
 
       <RBSheet
-        customStyles={{ container: styles.container }}
+        customStyles={{ container: styles.sheetContent }}
         height={450}
         openDuration={250}
         ref={sheet}>
@@ -297,18 +328,18 @@ export default function CalorieCalculator() {
 
           {/* Results Display */}
           {result && (
-            <View style={styles.resultContainer}>
-              <Text style={styles.resultTitle}>Your Results</Text>
+            <View style={styles.sheetResult}>
+              <Text style={styles.sheetResultTitle}>Your Results</Text>
               <View style={styles.mainNutrition}>
                 <View style={styles.nutritionHighlight}>
-                  <Text style={styles.highlightValue}>{result.bmr}</Text>
-                  <Text style={styles.highlightLabel}>BMR (calories/day)</Text>
+                  <Text style={styles.sheetResultValue}>{result.bmr}</Text>
+                  <Text style={styles.sheetResultTitle}>BMR (calories/day)</Text>
                 </View>
                 <View style={styles.nutritionHighlight}>
-                  <Text style={styles.highlightValue}>
+                  <Text style={styles.sheetResultValue}>
                     {result.dailyCalories}
                   </Text>
-                  <Text style={styles.highlightLabel}>Daily Calories</Text>
+                  <Text style={styles.sheetResultTitle}>Daily Calories</Text>
                 </View>
               </View>
             </View>
@@ -349,39 +380,38 @@ const styles = StyleSheet.create({
     flexBasis: 0,
     padding: 24,
   },
+  scrollContainer: {
+    flexGrow: 1,
+  },
+  header: {
+    marginVertical: 36,
+  },
+  headerImg: {
+    width: 80,
+    height: 80,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
   title: {
-    fontSize: 31,
+    fontSize: 28,
     fontWeight: '700',
-    color: '#1D2A32',
+    color: '#1d1d1d',
     marginBottom: 6,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 15,
     fontWeight: '500',
     color: '#929292',
-  },
-  /** Logo Fire */
-  header: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 20,
-  },
-
-  headerImg: {
-    width: 80,
-    height: 80,
-    alignSelf: 'center',
-    marginBottom: 36,
+    textAlign: 'center',
   },
   /** Form */
   form: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
+    marginBottom: 24,
+    flex: 1,
   },
   formAction: {
-    marginTop: 4,
-    marginBottom: 16,
+    marginVertical: 24,
   },
   formLink: {
     fontSize: 16,
@@ -394,22 +424,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   inputLabel: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '600',
     color: '#222',
     marginBottom: 8,
   },
   inputControl: {
-    height: 50,
+    height: 44,
     backgroundColor: '#fff',
     paddingHorizontal: 16,
     borderRadius: 12,
     fontSize: 15,
     fontWeight: '500',
     color: '#222',
-    borderWidth: 1,
-    borderColor: '#C9D3DB',
-    borderStyle: 'solid',
   },
   /** Button */
   btn: {
@@ -431,7 +458,7 @@ const styles = StyleSheet.create({
   },
   genderButtons: {
     flexDirection: 'row',
-    gap: 15,
+    gap: 12,
   },
   genderButton: {
     flex: 1,
@@ -439,86 +466,130 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    height: 44,
     backgroundColor: '#fff',
-    padding: 15,
     borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#2d2d2d',
   },
   genderButtonActive: {
-    borderColor: '#075eec',
+    backgroundColor: '#e3edff',
   },
   genderButtonText: {
-    fontSize: 16,
-    color: '#9e9e9e',
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#222',
   },
   genderButtonTextActive: {
     color: '#075eec',
   },
+  metricsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
   activityContainer: {
     marginBottom: 20,
   },
-  activityButton: {
+  activityLevelButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    padding: 16,
     backgroundColor: '#fff',
-    padding: 15,
     borderRadius: 12,
-    marginBottom: 10,
-    borderColor: '#C9D3DB',
-    borderStyle: 'solid',
+    marginBottom: 8,
   },
   activityButtonActive: {
-    backgroundColor: '#c9d5ea',
+    backgroundColor: '#e3edff',
     borderWidth: 2,
     borderColor: '#075eec',
   },
-  activityContent: {
+  activityLevelText: {
     flex: 1,
   },
-  activityLabel: {
-    fontSize: 16,
-    color: '#000',
+  activityLevelLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#222',
     marginBottom: 4,
   },
   activityLabelActive: {
     color: '#075eec',
   },
-  activityDescription: {
-    fontSize: 14,
-    color: '#000',
+  activityLevelDesc: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#666',
   },
-  resultContainer: {
-    marginTop: 20,
+  sheetContent: {
+    backgroundColor: '#fff',
+    padding: 24,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
-  resultTitle: {
-    fontSize: 18,
+  sheetTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#222',
+    marginBottom: 12,
+  },
+  sheetSubtitle: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#666',
+    marginBottom: 24,
+  },
+  sheetResult: {
+    backgroundColor: '#e3edff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  sheetResultTitle: {
+    fontSize: 15,
     fontWeight: '600',
-    color: '#181818',
-    marginTop: 10,
-    textAlign: 'center',
+    color: '#222',
+    marginBottom: 4,
   },
-    mainNutrition: {
+  sheetResultValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#075eec',
+  },
+  spacer: {
+    height: 24,
+  },
+  calculateButton: {
+    backgroundColor: '#075eec',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#075eec',
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    borderRadius: 15,
-    padding: 20,
-  },
-  nutritionHighlight: {
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginBottom: 12,
   },
-
-  highlightValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#2b64e3',
+  calculateButtonText: {
+    fontSize: 16,
+    lineHeight: 26,
+    fontWeight: '600',
+    color: '#fff',
   },
-  highlightLabel: {
-    fontSize: 14,
-    color: '#9e9e9e',
-    marginTop: 4,
-    textAlign: 'center',
+  resetButton: {
+    backgroundColor: '#dc3545',
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  resetButtonText: {
+    fontSize: 16,
+    lineHeight: 26,
+    fontWeight: '600',
+    color: '#fff',
   },
   message: {
     fontSize: 14,
@@ -545,5 +616,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#2b64e3',
   },
-
+  mainNutrition: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    borderRadius: 15,
+    padding: 20,
+  },
+  nutritionHighlight: {
+    alignItems: 'center',
+  },
 });
