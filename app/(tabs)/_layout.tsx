@@ -27,6 +27,13 @@ export default function TabLayout() {
         }),
       }}>
       <Tabs.Screen
+        name="landingPage"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="home" size={28} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="index"
         options={{
           title: 'Scanner',

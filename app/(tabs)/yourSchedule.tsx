@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   Dimensions,
@@ -11,16 +11,51 @@ import {
 } from 'react-native';
 import moment from 'moment';
 import Swiper from 'react-native-swiper';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
-export default function Example() {
+interface TodayItem {
+  id: string;
+  name: string;
+  calories: number;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  color: string;
+}
+
+export default function YourSchedule() {
   const swiper = useRef();
   const contentSwiper = useRef();
   const [week, setWeek] = useState(0);
-
   const [value, setValue] = useState(new Date());
+  const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
+
+  // Load today's items whenever the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadTodayItems();
+      
+      // Set up an interval to refresh data every few seconds
+      const interval = setInterval(loadTodayItems, 3000);
+      
+      // Clean up interval on unfocus
+      return () => clearInterval(interval);
+    }, [])
+  );
+
+  const loadTodayItems = async () => {
+    try {
+      const savedItems = await AsyncStorage.getItem('todayItems');
+      if (savedItems) {
+        const items = JSON.parse(savedItems);
+        setTodayItems(items);
+      }
+    } catch (error) {
+      console.error('Error loading today items:', error);
+    }
+  };
 
   /**
    * Create an array of weekdays for previous, current, and next weeks.
@@ -51,44 +86,19 @@ export default function Example() {
     ];
   }, [value]);
 
-  //Flatlist Section Starts
-
-
-  /// Add asynchronous Data as discussed. - Rishabh
-  const transactions = [
-    { id: '1', name: 'Gas ',   amount: 64.40, iconName: 'fuel', color: '#FFA07A' },
-    { id: '2', name: 'Petco',  amount: 120.49, iconName: 'paw', color: '#CCCCFF' },
-    { id: '3', name: 'Target', amount: 254.12, iconName: 'cart', color: '#FFA07A' },
-    { id: '4', name: 'United', amount: 1943.00, iconName: 'book', color: '#CCCCFF' },
-    { id: '5', name: 'Starbucks', amount: 3.85, iconName: 'coffee', color: '#CCCCFF' },
-    { id: '6', name: 'AMC',    amount: 12.55, iconName: 'film', color: '#FFA07A' },
-    { id: '7', name: 'Gas ',   amount: 64.40, iconName: 'fuel', color: '#FFA07A' },
-    { id: '8', name: 'Petco',  amount: 120.49, iconName: 'paw', color: '#CCCCFF' },
-    { id: '9', name: 'Target', amount: 254.12, iconName: 'cart', color: '#FFA07A' },
-  ];
-
-  // Icon component placeholder (you'll need to use actual icons from your icon library)
-  const Icon = ({ name, color }) => (
-    <View style={[styles.iconContainer, { backgroundColor: color }]}>
-      {/* Replace this with your actual icon component */}
-      <Text style={styles.iconPlaceholder}>{name[0]}</Text>
-    </View>
-  );
-
-  const renderItem = ({ item }) => (
+  const renderFoodItem = ({ item }: { item: TodayItem }) => (
     <View style={styles.transactionItem}>
       <View style={styles.leftContent}>
-        <Icon name={item.iconName} color={item.color} />
+        <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
+          <MaterialCommunityIcons name={item.icon} size={24} color="#fff" />
+        </View>
         <View style={styles.textContainer}>
           <Text style={styles.merchantName}>{item.name}</Text>
+          <Text style={styles.calorieText}>{item.calories} kcal</Text>
         </View>
       </View>
-      <Text style={styles.amountText}>${item.amount.toFixed(2)}</Text>
     </View>
   );
-
-
-  //Flatlist Section Ends
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -181,6 +191,7 @@ export default function Example() {
             }, 10);
           }}>
           {days.map((day, index) => {
+            const isToday = moment(day).isSame(moment(), 'day');
             return (
               <View
                 key={index}
@@ -190,14 +201,25 @@ export default function Example() {
                 </Text>
                 <View style={styles.placeholder}>
                   <View style={styles.placeholderInset}>
-                    {
+                    {isToday ? (
                       <FlatList
-                        data={transactions}
-                        renderItem={renderItem}
+                        data={todayItems}
+                        renderItem={renderFoodItem}
                         keyExtractor={item => item.id}
                         showsVerticalScrollIndicator={false}
+                        ListEmptyComponent={() => (
+                          <View style={styles.emptyContainer}>
+                            <MaterialCommunityIcons name="food-apple" size={48} color="#ccc" />
+                            <Text style={styles.emptyText}>No food items recorded today</Text>
+                          </View>
+                        )}
                       />
-                    }
+                    ) : (
+                      <View style={styles.emptyContainer}>
+                        <MaterialCommunityIcons name="calendar" size={48} color="#ccc" />
+                        <Text style={styles.emptyText}>No records for this day</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               </View>
@@ -329,41 +351,45 @@ const styles = StyleSheet.create({
   //Flatlist Component Code Start
   transactionItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: 12,
-    
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e5e5',
   },
   leftContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
-    marginLeft: 10,
-    marginRight: 12,
-    marginVertical: 3,
-  },
-  iconPlaceholder: {
-    fontSize: 16,
-    color: '#000',
+    justifyContent: 'center',
   },
   textContainer: {
-    justifyContent: 'center',
+    marginLeft: 12,
   },
   merchantName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1d1d1d',
   },
-  amountText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#22AA44',
-    marginRight:20,
+  calorieText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 32,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 12,
   },
 });
