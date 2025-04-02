@@ -11,12 +11,13 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import CircularProgress from '../../components/CircularProgress';
 
 interface TodayItem {
   id: string;
   name: string;
   calories: number;
-  icon: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   color: string;
 }
 
@@ -112,20 +113,15 @@ export default function NutritionScreen() {
     }
   };
 
-  // Helper function to calculate progress bar width
-  const getProgressWidth = (current: number, goal: number) => {
-    return Math.min((current / goal) * 100, 100);
-  };
-
   // Get icon for each meal type
-  const getMealIcon = (type: string) => {
+  const getMealIcon = (type: keyof typeof MaterialCommunityIcons.glyphMap) => {
     return <MaterialCommunityIcons name={type} size={24} color="#4CAF50" />;
   };
 
-  // Function to add a new meal item
-  const handleAddMeal = async (mealId: string) => {
-    // TODO: Implement meal addition logic
-    console.log(`Add item to meal with id: ${mealId}`);
+  // Calculate percentage for circular progress
+  const calculatePercentage = (current: number, goal: number) => {
+    if (goal === 0) return 0;
+    return Math.min((current / goal) * 100, 100);
   };
 
   // Nutrition Dashboard Component
@@ -150,132 +146,112 @@ export default function NutritionScreen() {
         </View>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Nutrition Progress</Text>
-        <View style={styles.nutrientBarsContainer}>
-          {/* Calorie Progress */}
-          <View style={styles.nutrientBar}>
-            <View style={styles.nutrientLabelContainer}>
-              <Text style={styles.nutrientLabel}>Calories</Text>
-              <Text style={styles.nutrientText}>
-                {nutritionData.calories.current} / {nutritionData.calories.goal} kcal
-              </Text>
-            </View>
-            <View style={styles.progressBarBackground}>
-              <View 
-                style={[
-                  styles.progressBarFill, 
-                  styles.progressBarCalories,
-                  { width: `${getProgressWidth(nutritionData.calories.current, nutritionData.calories.goal)}%` }
-                ]} 
-              />
-            </View>
+      {/* Circular Progress Charts */}
+      <View style={styles.chartsContainer}>
+        <Text style={styles.sectionTitle}>Nutrition Progress</Text>
+        <View style={styles.chartsRow}>
+          {/* Calories Progress */}
+          <View style={styles.chartItem}>
+            <CircularProgress
+              value={nutritionData.calories.current}
+              maxValue={nutritionData.calories.goal}
+              radius={40}
+              strokeWidth={10}
+              title="Calories"
+              activeStrokeColor="#4CAF50"
+              inactiveStrokeColor="#E8E8E8"
+              textColor="#1d1d1d"
+              titleColor="#666"
+            />
+            <Text style={styles.chartValue}>
+              {nutritionData.calories.current} / {nutritionData.calories.goal} kcal
+            </Text>
           </View>
 
           {/* Carbs Progress */}
-          <View style={styles.nutrientBar}>
-            <View style={styles.nutrientLabelContainer}>
-              <Text style={styles.nutrientLabel}>Carbs</Text>
-              <Text style={styles.nutrientText}>
-                {nutritionData.carbs.current} / {nutritionData.carbs.goal} g
-              </Text>
-            </View>
-            <View style={styles.progressBarBackground}>
-              <View 
-                style={[
-                  styles.progressBarFill, 
-                  styles.progressBarCarbs,
-                  { width: `${getProgressWidth(nutritionData.carbs.current, nutritionData.carbs.goal)}%` }
-                ]} 
-              />
-            </View>
+          <View style={styles.chartItem}>
+            <CircularProgress
+              value={nutritionData.carbs.current}
+              maxValue={nutritionData.carbs.goal}
+              radius={40}
+              strokeWidth={10}
+              title="Carbs"
+              activeStrokeColor="#2196F3"
+              inactiveStrokeColor="#E8E8E8"
+              textColor="#1d1d1d"
+              titleColor="#666"
+            />
+            <Text style={styles.chartValue}>
+              {nutritionData.carbs.current} / {nutritionData.carbs.goal} g
+            </Text>
           </View>
-          
+        </View>
+
+        <View style={styles.chartsRow}>
           {/* Protein Progress */}
-          <View style={styles.nutrientBar}>
-            <View style={styles.nutrientLabelContainer}>
-              <Text style={styles.nutrientLabel}>Protein</Text>
-              <Text style={styles.nutrientText}>
-                {nutritionData.protein.current} / {nutritionData.protein.goal} g
-              </Text>
-            </View>
-            <View style={styles.progressBarBackground}>
-              <View 
-                style={[
-                  styles.progressBarFill, 
-                  styles.progressBarProtein,
-                  { width: `${getProgressWidth(nutritionData.protein.current, nutritionData.protein.goal)}%` }
-                ]} 
-              />
-            </View>
+          <View style={styles.chartItem}>
+            <CircularProgress
+              value={nutritionData.protein.current}
+              maxValue={nutritionData.protein.goal}
+              radius={40}
+              strokeWidth={10}
+              title="Protein"
+              activeStrokeColor="#FF9800"
+              inactiveStrokeColor="#E8E8E8"
+              textColor="#1d1d1d"
+              titleColor="#666"
+            />
+            <Text style={styles.chartValue}>
+              {nutritionData.protein.current} / {nutritionData.protein.goal} g
+            </Text>
           </View>
-          
+
           {/* Fat Progress */}
-          <View style={styles.nutrientBar}>
-            <View style={styles.nutrientLabelContainer}>
-              <Text style={styles.nutrientLabel}>Fat</Text>
-              <Text style={styles.nutrientText}>
-                {nutritionData.fat.current} / {nutritionData.fat.goal} g
-              </Text>
-            </View>
-            <View style={styles.progressBarBackground}>
-              <View 
-                style={[
-                  styles.progressBarFill, 
-                  styles.progressBarFat,
-                  { width: `${getProgressWidth(nutritionData.fat.current, nutritionData.fat.goal)}%` }
-                ]} 
-              />
-            </View>
+          <View style={styles.chartItem}>
+            <CircularProgress
+              value={nutritionData.fat.current}
+              maxValue={nutritionData.fat.goal}
+              radius={40}
+              strokeWidth={10}
+              title="Fat"
+              activeStrokeColor="#F44336"
+              inactiveStrokeColor="#E8E8E8"
+              textColor="#1d1d1d"
+              titleColor="#666"
+            />
+            <Text style={styles.chartValue}>
+              {nutritionData.fat.current} / {nutritionData.fat.goal} g
+            </Text>
           </View>
         </View>
       </View>
       
-      {/* Meal List */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Today's Food</Text>
-        <ScrollView style={styles.scrollView}>
-          {todayItems.map((item) => (
-            <View key={item.id} style={styles.foodItemCard}>
+      {/* Today's Food Items */}
+      <View style={styles.todaysFoodContainer}>
+        <Text style={styles.sectionTitle}>Today's Food</Text>
+        {todayItems.length > 0 ? (
+          todayItems.map((item) => (
+            <View key={item.id} style={styles.foodItem}>
               <View style={styles.foodItemLeft}>
-                <MaterialCommunityIcons 
-                  name={item.icon} 
-                  size={24} 
-                  color={item.color} 
-                  style={styles.foodIcon}
-                />
-                <Text style={styles.foodName}>{item.name}</Text>
+                <MaterialCommunityIcons name={item.icon} size={24} color={item.color} />
+                <Text style={styles.foodItemName}>{item.name}</Text>
               </View>
-              <View style={styles.foodItemRight}>
-                <Text style={styles.calorieText}>{item.calories}</Text>
-                <Text style={styles.calorieUnit}>cal</Text>
-              </View>
+              <Text style={styles.foodItemCalories}>{item.calories} cal</Text>
             </View>
-          ))}
-        </ScrollView>
-        
-        <TouchableOpacity 
-          style={styles.addFoodButton}
-          onPress={() => {/* TODO: Implement add food */}}
-        >
-          <MaterialCommunityIcons name="plus" size={24} color="#ffffff" />
-          <Text style={styles.addFoodText}>Add Food</Text>
-        </TouchableOpacity>
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="food-apple-outline" size={32} color="#666" />
+            <Text style={styles.emptyStateText}>No food items added today</Text>
+          </View>
+        )}
       </View>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1a1a1a" />
-      <View style={styles.header}>
-        <Text style={styles.title}>Nutrition Tracker</Text>
-        <Text style={styles.subtitle}>
-          {value.toLocaleDateString('en-US', { dateStyle: 'full' })}
-        </Text>
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <NutritionDashboard />
       </ScrollView>
     </SafeAreaView>
@@ -285,166 +261,112 @@ export default function NutritionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#a5d6e4',
+    backgroundColor: '#f5f5f5',
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2d2d2d',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#ffffff',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#9e9e9e',
+  scrollContainer: {
+    flexGrow: 1,
+    paddingVertical: 24,
   },
   nutritionContainer: {
-    marginTop: 16,
+    paddingHorizontal: 16,
   },
   summaryContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  summaryItem: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#2d2d2d',
+    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
-    marginHorizontal: 4,
+    marginBottom: 16,
+  },
+  summaryItem: {
+    alignItems: 'center',
   },
   summaryValue: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginTop: 8,
+    fontWeight: '600',
+    color: '#1d1d1d',
+    marginTop: 4,
   },
   summaryLabel: {
     fontSize: 14,
-    color: '#9e9e9e',
-    marginTop: 4,
+    color: '#666',
+    marginTop: 2,
   },
-  card: {
-    backgroundColor: '#2d2d2d',
-    borderRadius: 16,
-    padding: 16,
+  chartsContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
     marginBottom: 16,
   },
-  cardTitle: {
+  sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#1d1d1d',
+    marginBottom: 20,
+  },
+  chartsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
     marginBottom: 16,
   },
-  nutrientBarsContainer: {
-    gap: 16,
-  },
-  nutrientBar: {
-    gap: 8,
-  },
-  nutrientLabelContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  chartItem: {
     alignItems: 'center',
-  },
-  nutrientLabel: {
-    fontSize: 16,
-    color: '#ffffff',
-  },
-  progressBarBackground: {
-    height: 8,
-    backgroundColor: '#1a1a1a',
-    borderRadius: 4,
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  progressBarCalories: {
-    backgroundColor: '#4CAF50',
-  },
-  progressBarCarbs: {
-    backgroundColor: '#2196F3',
-  },
-  progressBarProtein: {
-    backgroundColor: '#f44336',
-  },
-  progressBarFat: {
-    backgroundColor: '#ff9800',
-  },
-  nutrientText: {
-    fontSize: 14,
-    color: '#9e9e9e',
-  },
-  foodItemCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    padding: 16,
-    marginHorizontal: 16,
-    marginVertical: 8,
+    width: '45%',
+    backgroundColor: '#f8f8f8',
     borderRadius: 12,
-    elevation: 2,
+    padding: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  chartValue: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  todaysFoodContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+  },
+  foodItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   foodItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    gap: 12,
   },
-  foodIcon: {
-    marginRight: 12,
-  },
-  foodName: {
+  foodItemName: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333333',
+    color: '#1d1d1d',
   },
-  foodItemRight: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  calorieText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#4CAF50',
-    marginRight: 4,
-  },
-  calorieUnit: {
-    fontSize: 14,
-    color: '#9e9e9e',
-  },
-  scrollView: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  addFoodButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#4CAF50',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 16,
-  },
-  addFoodText: {
-    color: '#ffffff',
+  foodItemCalories: {
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
+    color: '#4CAF50',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+    gap: 8,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
 });
