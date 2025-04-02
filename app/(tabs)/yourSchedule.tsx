@@ -93,8 +93,10 @@ export default function YourSchedule() {
           <MaterialCommunityIcons name={item.icon} size={24} color="#fff" />
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.merchantName}>{item.name}</Text>
-          <Text style={styles.calorieText}>{item.calories} kcal</Text>
+          <View style={styles.nameCalorieRow}>
+            <Text style={styles.merchantName}>{item.name}</Text>
+            <Text style={styles.calorieText}>{item.calories} kcal</Text>
+          </View>
         </View>
       </View>
     </View>
@@ -369,7 +371,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   textContainer: {
+    flex: 1,
     marginLeft: 12,
+  },
+  nameCalorieRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
   },
   merchantName: {
     fontSize: 16,
@@ -379,7 +388,7 @@ const styles = StyleSheet.create({
   calorieText: {
     fontSize: 14,
     color: '#666',
-    marginTop: 2,
+    marginLeft: 8,
   },
   emptyContainer: {
     flex: 1,
