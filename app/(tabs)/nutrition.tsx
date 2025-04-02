@@ -50,8 +50,17 @@ export default function NutritionScreen() {
   // Load goals whenever the screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      loadNutritionGoals();
-      loadTodayItems();
+      const loadData = async () => {
+        await loadNutritionGoals();
+        await loadTodayItems();
+      };
+      loadData();
+      
+      // Set up an interval to refresh data every few seconds
+      const interval = setInterval(loadData, 3000);
+      
+      // Clean up interval on unfocus
+      return () => clearInterval(interval);
     }, [])
   );
 
@@ -98,15 +107,12 @@ export default function NutritionScreen() {
   const loadTodayItems = async () => {
     try {
       const savedItems = await AsyncStorage.getItem('todayItems');
+      console.log('Loading today items:', savedItems);
+      
       if (savedItems) {
-        setTodayItems(JSON.parse(savedItems));
-      } else {
-        // Default items for testing
-        setTodayItems([
-          { id: '1', name: 'Apple', calories: 95, icon: 'food-apple', color: '#FFA07A' },
-          { id: '2', name: 'Chicken Salad', calories: 350, icon: 'food', color: '#CCCCFF' },
-          { id: '3', name: 'Greek Yogurt', calories: 130, icon: 'cup', color: '#FFA07A' },
-        ]);
+        const items = JSON.parse(savedItems);
+        console.log('Parsed today items:', items);
+        setTodayItems(items);
       }
     } catch (error) {
       console.error('Error loading today items:', error);

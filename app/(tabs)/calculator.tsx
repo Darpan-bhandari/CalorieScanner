@@ -1,22 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   StyleSheet,
   SafeAreaView,
   View,
-  Image,
   Text,
-  Modal,
-  TouchableOpacity,
   TextInput,
   Pressable,
   ScrollView,
 } from 'react-native';
-
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import RBSheet from 'react-native-raw-bottom-sheet';
-import FeatherIcon from '@expo/vector-icons/Feather';
 
 export default function CalorieCalculator() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -27,7 +21,7 @@ export default function CalorieCalculator() {
   const [activityLevel, setActivityLevel] = useState('sedentary');
   const [result, setResult] = useState(null);
 
-  const sheet = React.useRef();
+  const sheet = useRef<RBSheet>(null);
 
   const openBottomSheet = () => {
     sheet.current.open();
@@ -144,229 +138,183 @@ export default function CalorieCalculator() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.container}>
-          <View style={styles.header}>
-            <Image
-              alt="App Logo"
-              resizeMode="contain"
-              style={styles.headerImg}
-              source={{
-                uri: 'https://cdn.iconscout.com/icon/premium/png-256-thumb/calories-1-94158.png?f=webp&w=256',
-              }}
-            />
+        <View style={styles.header}>
+          <MaterialCommunityIcons 
+            name="calculator" 
+            size={80} 
+            color="#075eec"
+            style={styles.headerImg}
+          />
+          <Text style={styles.title}>BMR Calculator</Text>
+          <Text style={styles.subtitle}>Calculate your daily calorie needs</Text>
+        </View>
 
-            <Text style={styles.title}>
-              Enter Details to{' '}
-              <Text style={{ color: '#075eec' }}>Calulate BMR</Text>
-            </Text>
+        <View style={styles.form}>
+          {/* Gender Selection */}
+          <View style={styles.formSection}>
+            <Text style={styles.sectionTitle}>Gender</Text>
+            <View style={styles.genderButtons}>
+              <Pressable
+                style={[
+                  styles.genderButton,
+                  gender === 'male' && styles.genderButtonActive,
+                ]}
+                onPress={() => setGender('male')}>
+                <MaterialCommunityIcons
+                  name="gender-male"
+                  size={24}
+                  color={gender === 'male' ? '#075eec' : '#222'}
+                />
+                <Text
+                  style={[
+                    styles.genderButtonText,
+                    gender === 'male' && styles.genderButtonTextActive,
+                  ]}>
+                  Male
+                </Text>
+              </Pressable>
 
-            <Text style={styles.subtitle}>
-              Get Details about your required calories
-            </Text>
+              <Pressable
+                style={[
+                  styles.genderButton,
+                  gender === 'female' && styles.genderButtonActive,
+                ]}
+                onPress={() => setGender('female')}>
+                <MaterialCommunityIcons
+                  name="gender-female"
+                  size={24}
+                  color={gender === 'female' ? '#075eec' : '#222'}
+                />
+                <Text
+                  style={[
+                    styles.genderButtonText,
+                    gender === 'female' && styles.genderButtonTextActive,
+                  ]}>
+                  Female
+                </Text>
+              </Pressable>
+            </View>
           </View>
 
-          <View style={styles.form}>
-            <View style={styles.input}>
-              <Text style={styles.inputLabel}>Gender</Text>
-              <View style={styles.genderButtons}>
-                <Pressable
-                  style={[
-                    styles.genderButton,
-                    gender === 'male' && styles.genderButtonActive,
-                  ]}
-                  onPress={() => setGender('male')}>
-                  <MaterialCommunityIcons
-                    name="gender-male"
-                    size={24}
-                    color={gender === 'male' ? '#075eec' : '#000'}
-                  />
-                  <Text
-                    style={[
-                      styles.genderButtonText,
-                      gender === 'male' && styles.genderButtonTextActive,
-                    ]}>
-                    Male
-                  </Text>
-                </Pressable>
-                <Pressable
-                  style={[
-                    styles.genderButton,
-                    gender === 'female' && styles.genderButtonActive,
-                  ]}
-                  onPress={() => setGender('female')}>
-                  <MaterialCommunityIcons
-                    name="gender-female"
-                    size={24}
-                    color={gender === 'female' ? '#075eec' : '#000'}
-                  />
-                  <Text
-                    style={[
-                      styles.genderButtonText,
-                      gender === 'female' && styles.genderButtonTextActive,
-                    ]}>
-                    Female
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-
-            {/*Basic Metrics Container*/}
+          {/* Basic Metrics */}
+          <View style={styles.formSection}>
+            <Text style={styles.sectionTitle}>Basic Information</Text>
             <View style={styles.metricsContainer}>
-              <View style={styles.input}>
+              <View style={styles.metricInput}>
                 <Text style={styles.inputLabel}>Age</Text>
                 <TextInput
                   style={styles.inputControl}
-                  keyboardType="numeric"
-                  placeholder="Enter your age"
-                  placeholderTextColor="#666"
                   value={age}
                   onChangeText={setAge}
+                  placeholder="Years"
+                  keyboardType="numeric"
                 />
               </View>
 
-              <View style={styles.input}>
-                <Text style={styles.inputLabel}>Height (cm)</Text>
+              <View style={styles.metricInput}>
+                <Text style={styles.inputLabel}>Height</Text>
                 <TextInput
                   style={styles.inputControl}
-                  keyboardType="numeric"
-                  placeholder="Enter your height"
-                  placeholderTextColor="#666"
                   value={height}
                   onChangeText={setHeight}
+                  placeholder="cm"
+                  keyboardType="numeric"
                 />
               </View>
 
-              <View style={styles.input}>
-                <Text style={styles.inputLabel}>Weight (kg)</Text>
+              <View style={styles.metricInput}>
+                <Text style={styles.inputLabel}>Weight</Text>
                 <TextInput
                   style={styles.inputControl}
-                  keyboardType="numeric"
-                  placeholder="Enter your weight"
-                  placeholderTextColor="#666"
                   value={weight}
                   onChangeText={setWeight}
+                  placeholder="kg"
+                  keyboardType="numeric"
                 />
               </View>
             </View>
+          </View>
 
-            {/* Activity Level Selection */}
+          {/* Activity Level */}
+          <View style={styles.formSection}>
+            <Text style={styles.sectionTitle}>Activity Level</Text>
             <View style={styles.activityContainer}>
-              <Text style={styles.inputLabel}>Activity Level</Text>
-              {Object.entries(activityLevels).map(
-                ([key, { label, description }]) => (
-                  <Pressable
-                    key={key}
-                    style={[
-                      styles.activityLevelButton,
-                      activityLevel === key && styles.activityButtonActive,
-                    ]}
-                    onPress={() => setActivityLevel(key)}>
-                    <View style={styles.activityLevelText}>
-                      <Text
-                        style={[
-                          styles.activityLevelLabel,
-                          activityLevel === key && styles.activityLabelActive,
-                        ]}>
-                        {label}
-                      </Text>
-                      <Text style={styles.activityLevelDesc}>
-                        {description}
-                      </Text>
-                    </View>
-                    {activityLevel === key && (
-                      <MaterialCommunityIcons
-                        name="check"
-                        size={24}
-                        color="#075eec"
-                      />
-                    )}
-                  </Pressable>
-                )
-              )}
+              {Object.entries(activityLevels).map(([key, { label, description }]) => (
+                <Pressable
+                  key={key}
+                  style={[
+                    styles.activityButton,
+                    activityLevel === key && styles.activityButtonActive,
+                  ]}
+                  onPress={() => setActivityLevel(key)}>
+                  <View style={styles.activityContent}>
+                    <Text style={[styles.activityLabel, activityLevel === key && styles.activityLabelActive]}>
+                      {label}
+                    </Text>
+                    <Text style={styles.activityDescription}>
+                      {description}
+                    </Text>
+                  </View>
+                  {activityLevel === key && (
+                    <MaterialCommunityIcons name="check-circle" size={24} color="#075eec" />
+                  )}
+                </Pressable>
+              ))}
             </View>
+          </View>
 
-            <View style={styles.formAction}>
-              <TouchableOpacity
-                onPress={calculateBMR}
-                style={styles.calculateButton}>
-                <Text style={styles.calculateButtonText}>Calculate BMR</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={resetCalculator}
-                style={styles.resetButton}>
-                <MaterialCommunityIcons name="refresh" size={20} color="#fff" />
-                <Text style={styles.resetButtonText}>Reset</Text>
-              </TouchableOpacity>
-            </View>
+          {/* Action Buttons */}
+          <View style={styles.formAction}>
+            <Pressable style={styles.calculateButton} onPress={calculateBMR}>
+              <MaterialCommunityIcons name="calculator" size={24} color="#fff" />
+              <Text style={styles.calculateButtonText}>Calculate BMR</Text>
+            </Pressable>
 
-            <TouchableOpacity
-              onPress={() => {
-                // handle link
-              }}>
-              <Text style={styles.formLink}>Go back to Dashboard ?</Text>
-            </TouchableOpacity>
+            <Pressable style={styles.resetButton} onPress={resetCalculator}>
+              <MaterialCommunityIcons name="refresh" size={24} color="#fff" />
+              <Text style={styles.resetButtonText}>Reset</Text>
+            </Pressable>
           </View>
         </View>
-
-  
       </ScrollView>
 
+      {/* Results Sheet */}
       <RBSheet
-        customStyles={{ container: styles.sheetContent }}
+        ref={sheet}
         height={450}
         openDuration={250}
-        ref={sheet}>
+        customStyles={{
+          container: styles.sheetContainer,
+        }}>
         <View style={styles.sheetContent}>
-          <FeatherIcon
-            color="#2b64e3"
-            name="clipboard"
-            style={{
-              alignSelf: 'center',
-            }}
-            size={48}
-          />
+          <Text style={styles.sheetTitle}>Your Results</Text>
+          <Text style={styles.sheetSubtitle}>
+            Based on your metrics, here are your daily calorie needs
+          </Text>
 
-          {/* Results Display */}
           {result && (
-            <View style={styles.sheetResult}>
-              <Text style={styles.sheetResultTitle}>Your Results</Text>
-              <View style={styles.mainNutrition}>
-                <View style={styles.nutritionHighlight}>
-                  <Text style={styles.sheetResultValue}>{result.bmr}</Text>
-                  <Text style={styles.sheetResultTitle}>BMR (calories/day)</Text>
-                </View>
-                <View style={styles.nutritionHighlight}>
-                  <Text style={styles.sheetResultValue}>
-                    {result.dailyCalories}
-                  </Text>
-                  <Text style={styles.sheetResultTitle}>Daily Calories</Text>
-                </View>
+            <View style={styles.resultContainer}>
+              <View style={styles.resultCard}>
+                <Text style={styles.resultTitle}>Basal Metabolic Rate (BMR)</Text>
+                <Text style={styles.resultValue}>{result.bmr}</Text>
+                <Text style={styles.resultUnit}>calories/day</Text>
               </View>
+
+              <View style={styles.resultCard}>
+                <Text style={styles.resultTitle}>Daily Calorie Needs</Text>
+                <Text style={styles.resultValue}>{result.dailyCalories}</Text>
+                <Text style={styles.resultUnit}>calories/day</Text>
+              </View>
+
+              <Text style={styles.resultNote}>
+                These calculations are based on the Mifflin-St Jeor equation, which is considered one of the most accurate methods for estimating calorie needs.
+              </Text>
             </View>
           )}
-          <Text style={styles.message}>
-            These values are calculated on the input provided by user with the
-            BMR calculation formula these values may be inaccurate,
-          </Text>
-          <TouchableOpacity
-            onPress={() => {
-              // handle onPress
-            }}>
-            <View style={styles.btn}>
-              <Text style={styles.btnText}>Proceed</Text>
-            </View>
-          </TouchableOpacity>
 
-          <View style={styles.spacer} />
-
-          <TouchableOpacity
-            onPress={() => {
-              // handle onPress
-            }}>
-            <View style={styles.btnSecondary}>
-              <Text style={styles.btnSecondaryText}>Calculate Again</Text>
-            </View>
-          </TouchableOpacity>
+          <Pressable style={styles.closeButton} onPress={() => sheet.current?.close()}>
+            <Text style={styles.closeButtonText}>Close</Text>
+          </Pressable>
         </View>
       </RBSheet>
     </SafeAreaView>
@@ -375,28 +323,28 @@ export default function CalorieCalculator() {
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
-    padding: 24,
+    flex: 1,
+    backgroundColor: '#f5f5f5',
   },
   scrollContainer: {
     flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
   },
   header: {
+    alignItems: 'center',
     marginVertical: 36,
   },
   headerImg: {
     width: 80,
     height: 80,
-    alignSelf: 'center',
     marginBottom: 16,
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
     color: '#1d1d1d',
-    marginBottom: 6,
+    marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
@@ -405,56 +353,17 @@ const styles = StyleSheet.create({
     color: '#929292',
     textAlign: 'center',
   },
-  /** Form */
   form: {
-    marginBottom: 24,
     flex: 1,
   },
-  formAction: {
-    marginVertical: 24,
+  formSection: {
+    marginBottom: 24,
   },
-  formLink: {
-    fontSize: 16,
+  sectionTitle: {
+    fontSize: 17,
     fontWeight: '600',
-    color: '#075eec',
-    textAlign: 'center',
-  },
-  /** Input */
-  input: {
+    color: '#1d1d1d',
     marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#222',
-    marginBottom: 8,
-  },
-  inputControl: {
-    height: 44,
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#222',
-  },
-  /** Button */
-  btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    backgroundColor: '#075eec',
-    borderColor: '#075eec',
-  },
-  btnText: {
-    fontSize: 18,
-    lineHeight: 26,
-    fontWeight: '600',
-    color: '#fff',
   },
   genderButtons: {
     flexDirection: 'row',
@@ -466,12 +375,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    height: 44,
+    paddingVertical: 16,
     backgroundColor: '#fff',
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   genderButtonActive: {
     backgroundColor: '#e3edff',
+    borderColor: '#075eec',
   },
   genderButtonText: {
     fontSize: 15,
@@ -485,144 +397,154 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
-  activityContainer: {
-    marginBottom: 20,
+  metricInput: {
+    flex: 1,
   },
-  activityLevelButton: {
+  inputLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1d1d1d',
+    marginBottom: 8,
+  },
+  inputControl: {
+    height: 44,
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1d1d1d',
+  },
+  activityContainer: {
+    gap: 8,
+  },
+  activityButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
     backgroundColor: '#fff',
     borderRadius: 12,
-    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   activityButtonActive: {
     backgroundColor: '#e3edff',
-    borderWidth: 2,
     borderColor: '#075eec',
   },
-  activityLevelText: {
+  activityContent: {
     flex: 1,
+    marginRight: 12,
   },
-  activityLevelLabel: {
+  activityLabel: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#222',
+    color: '#1d1d1d',
     marginBottom: 4,
   },
   activityLabelActive: {
     color: '#075eec',
   },
-  activityLevelDesc: {
+  activityDescription: {
     fontSize: 13,
-    fontWeight: '500',
     color: '#666',
   },
-  sheetContent: {
-    backgroundColor: '#fff',
-    padding: 24,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  sheetTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#222',
-    marginBottom: 12,
-  },
-  sheetSubtitle: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#666',
-    marginBottom: 24,
-  },
-  sheetResult: {
-    backgroundColor: '#e3edff',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  sheetResultTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#222',
-    marginBottom: 4,
-  },
-  sheetResultValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#075eec',
-  },
-  spacer: {
-    height: 24,
+  formAction: {
+    gap: 12,
+    marginTop: 24,
   },
   calculateButton: {
-    backgroundColor: '#075eec',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#075eec',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginBottom: 12,
+    gap: 8,
+    paddingVertical: 16,
+    backgroundColor: '#075eec',
+    borderRadius: 12,
   },
   calculateButtonText: {
     fontSize: 16,
-    lineHeight: 26,
     fontWeight: '600',
     color: '#fff',
   },
   resetButton: {
-    backgroundColor: '#dc3545',
-    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
     gap: 8,
+    paddingVertical: 16,
+    backgroundColor: '#dc3545',
+    borderRadius: 12,
   },
   resetButtonText: {
     fontSize: 16,
-    lineHeight: 26,
     fontWeight: '600',
     color: '#fff',
   },
-  message: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#555',
-    marginTop: 16,
-    marginBottom: 32,
-    textAlign: 'center',
+  sheetContainer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: '#fff',
   },
-  btnSecondary: {
-    flexDirection: 'row',
+  sheetContent: {
+    padding: 24,
+  },
+  sheetTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1d1d1d',
+    marginBottom: 8,
+  },
+  sheetSubtitle: {
+    fontSize: 15,
+    color: '#666',
+    marginBottom: 24,
+  },
+  resultContainer: {
+    gap: 16,
+    marginBottom: 24,
+  },
+  resultCard: {
+    padding: 20,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  resultTitle: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#666',
+    marginBottom: 8,
+  },
+  resultValue: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#075eec',
+  },
+  resultUnit: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 4,
+  },
+  resultNote: {
+    fontSize: 13,
+    color: '#666',
+    lineHeight: 20,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  closeButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    backgroundColor: '#fff',
-    borderColor: '#fff',
+    paddingVertical: 16,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 12,
   },
-  btnSecondaryText: {
-    fontSize: 18,
-    lineHeight: 26,
+  closeButtonText: {
+    fontSize: 15,
     fontWeight: '600',
-    color: '#2b64e3',
-  },
-  mainNutrition: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    borderRadius: 15,
-    padding: 20,
-  },
-  nutritionHighlight: {
-    alignItems: 'center',
+    color: '#666',
   },
 });

@@ -20,26 +20,22 @@ export default function Example() {
       </View>
       <View style={styles.content}>
         <View style={styles.contentHeader}>
-          <Text style={styles.title}>
-            Plan your day{'\n'}with{' '}
-            <View style={styles.appName}>
-              <Text style={styles.appNameText}>Calorie Tracker+</Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.titleText}>Plan your day</Text>
+            <View style={styles.titleRow}>
+              <Text style={[styles.titleText, styles.withText]}>with</Text>
+              <View style={styles.appNameContainer}>
+                <Text style={styles.appNameText}>Calorie Tracker+</Text>
+              </View>
             </View>
-          </Text>
+          </View>
           <Text style={styles.text}>
             Track your daily calories, set fitness goals, and watch your progress unfold. 
             We've made healthy living simple and engaging.
           </Text>
         </View>
 
-        <TouchableOpacity
-          onPress={() => {
-            // handle onPress
-          }}>
-          <View style={styles.button}>
-            <Text style={styles.buttonText}>Let's get Started</Text>
-          </View>
-        </TouchableOpacity>
+
       </View>
     </SafeAreaView>
   );
@@ -49,13 +45,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  title: {
+  titleContainer: {
+    marginBottom: 20,
+  },
+  titleText: {
     fontSize: 28,
-    fontWeight: '500',
-    color: '#281b52',
-    textAlign: 'center',
-    marginBottom: 12,
-    lineHeight: 40,
+    fontWeight: '600',
+    color: '#1d1d1d',
+    lineHeight: 36,
+  },
+  withText: {
+    fontSize: 24,
+    opacity: 0.8,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  appNameContainer: {
+    backgroundColor: '#075eec',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  appNameText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
   },
   text: {
     fontSize: 15,
@@ -84,16 +102,6 @@ const styles = StyleSheet.create({
   },
   contentHeader: {
     paddingHorizontal: 26,
-  },
-  appName: {
-    backgroundColor: '#fff2dd',
-    marginVertical: 2,
-    paddingHorizontal: 2,
-  },
-  appNameText: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#281b52',
   },
   /** Button */
   button: {
