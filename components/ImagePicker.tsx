@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Platform, Dimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, CameraType } from 'expo-camera';
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
@@ -10,57 +10,70 @@ const WINDOW_HEIGHT = Dimensions.get('window').height;
 const CAPTURE_SIZE = Math.floor(WINDOW_HEIGHT * 0.08);
 
 export default function ImagePickerComponent() {
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
-  const [hasGalleryPermission, setHasGalleryPermission] = useState<boolean | null>(null);
+  const [facing, setFacing] = useState<CameraType>('back');
+  const [permission, requestPermission] = useCameraPermissions();
   const [showCamera, setShowCamera] = useState(false);
-  const [camera, setCamera] = useState<any | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const cameraRef = useRef<CameraView>(null);
 
-  useEffect(() => {
-    (async () => {
-      const cameraStatus = await Camera.requestCameraPermissionsAsync();
-      setHasCameraPermission(cameraStatus.status === 'granted');
+  if (!permission) {
+    return <View />;
+  }
 
-      if (Platform.OS !== 'web') {
-        const galleryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        setHasGalleryPermission(galleryStatus.status === 'granted');
-      }
-    })();
-  }, []);
+  if (!permission.granted) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.messageText}>We need your permission to show the camera</Text>
+        <TouchableOpacity style={styles.button} onPress={requestPermission}>
+          <Text style={styles.buttonText}>Grant Permission</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const handlePictureTaken = async (photo: { uri: string }) => {
+    if (!photo || !photo.uri) {
+      console.error('No photo data received');
+      return;
+    }
+
+    try {
+      setIsCapturing(true);
+      
+      // Ensure the directory exists
+      const directory = `${FileSystem.cacheDirectory}photos/`;
+      await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
+      
+      // Generate a new filename
+      const filename = `${directory}${Date.now()}.jpg`;
+      
+      // Copy the photo to our app's cache directory
+      await FileSystem.copyAsync({
+        from: photo.uri,
+        to: filename
+      });
+      
+      console.log('Photo saved to:', filename);
+      handleImageSelected(filename);
+    } catch (error) {
+      console.error('Error processing picture:', error);
+      alert('Failed to process picture. Please try again.');
+    } finally {
+      setIsCapturing(false);
+    }
+  };
 
   const takePicture = async () => {
-    if (camera && !isCapturing) {
+    if (!isCapturing && cameraRef.current) {
       try {
         setIsCapturing(true);
-        const photo = await camera.takePictureAsync({
+        const photo = await cameraRef.current.takePictureAsync({
           quality: 0.7,
-          exif: false,
-          base64: true,
         });
-        
-        if (!photo || !photo.uri) {
-          throw new Error('Failed to capture photo');
-        }
-
-        // Ensure the directory exists
-        const directory = `${FileSystem.cacheDirectory}photos/`;
-        await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
-        
-        // Generate a new filename
-        const filename = `${directory}${Date.now()}.jpg`;
-        
-        // Copy the photo to our app's cache directory
-        await FileSystem.copyAsync({
-          from: photo.uri,
-          to: filename
-        });
-        
-        console.log('Photo saved to:', filename);
-        handleImageSelected(filename);
+        await handlePictureTaken(photo);
       } catch (error) {
         console.error('Error taking picture:', error);
         alert('Failed to take picture. Please try again.');
-      } finally {
         setIsCapturing(false);
       }
     }
@@ -121,29 +134,14 @@ export default function ImagePickerComponent() {
     }
   };
 
-  if (hasCameraPermission === null || hasGalleryPermission === null) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.messageText}>Requesting permissions...</Text>
-      </View>
-    );
-  }
-
-  if (hasCameraPermission === false || hasGalleryPermission === false) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.messageText}>No access to camera or gallery</Text>
-      </View>
-    );
-  }
-
   if (showCamera) {
     return (
       <View style={styles.container}>
-        <Camera
+        <CameraView
+          ref={cameraRef}
           style={styles.camera}
-          
-          ref={(ref) => setCamera(ref)}
+          facing={facing}
+          onMountError={(error) => console.error('Camera mount error:', error)}
         >
           <View style={styles.overlay}>
             <View style={styles.controls}>
@@ -167,7 +165,7 @@ export default function ImagePickerComponent() {
               </TouchableOpacity>
             </View>
           </View>
-        </Camera>
+        </CameraView>
       </View>
     );
   }
