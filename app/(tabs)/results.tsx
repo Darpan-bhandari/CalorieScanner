@@ -27,9 +27,26 @@ export default function ResultsScreen() {
   const [nutritionInfo, setNutritionInfo] = useState<NutritionInfo | null>(null);
   const [detectedLabels, setDetectedLabels] = useState<string[]>([]);
 
-  const updateNutritionData = async (calories: number) => {
+  const updateNutritionData = async (nutritionItem: NutritionInfo) => {
     try {
-      // Get current nutrition data
+      // Create the new food item first
+      const newItem = {
+        id: Date.now().toString(),
+        name: nutritionItem.name,
+        calories: nutritionItem.calories,
+        icon: 'fruit-cherries',
+        color: '#FFA07A'
+      };
+
+      // Get and update today's items first
+      const savedItems = await AsyncStorage.getItem('todayItems');
+      let todayItems = savedItems ? JSON.parse(savedItems) : [];
+      todayItems.push(newItem);
+      
+      // Save updated items immediately
+      await AsyncStorage.setItem('todayItems', JSON.stringify(todayItems));
+
+      // Then update nutrition goals
       const savedGoals = await AsyncStorage.getItem('nutritionGoals');
       if (!savedGoals) {
         console.error('No nutrition goals found');
@@ -39,12 +56,12 @@ export default function ResultsScreen() {
       const goals = JSON.parse(savedGoals);
       
       // Update calories consumed
-      goals.calories.current += calories;
+      goals.calories.current += nutritionItem.calories;
       
       // Calculate macros based on typical fruit composition (rough estimates)
-      const carbsGrams = Math.round((calories * 0.9) / 4); // 90% carbs
-      const proteinGrams = Math.round((calories * 0.05) / 4); // 5% protein
-      const fatGrams = Math.round((calories * 0.05) / 9); // 5% fat
+      const carbsGrams = Math.round((nutritionItem.calories * 0.9) / 4); // 90% carbs
+      const proteinGrams = Math.round((nutritionItem.calories * 0.05) / 4); // 5% protein
+      const fatGrams = Math.round((nutritionItem.calories * 0.05) / 9); // 5% fat
       
       goals.carbs.current += carbsGrams;
       goals.protein.current += proteinGrams;
@@ -52,24 +69,6 @@ export default function ResultsScreen() {
 
       // Save updated nutrition data
       await AsyncStorage.setItem('nutritionGoals', JSON.stringify(goals));
-
-      // Update today's food items
-      if (nutritionInfo) {
-        const savedItems = await AsyncStorage.getItem('todayItems');
-        let todayItems = savedItems ? JSON.parse(savedItems) : [];
-        
-        // Add the new item
-        todayItems.push({
-          id: Date.now().toString(),
-          name: nutritionInfo.name,
-          calories: nutritionInfo.calories,
-          icon: 'fruit-cherries',
-          color: '#FFA07A'
-        });
-
-        // Save updated items
-        await AsyncStorage.setItem('todayItems', JSON.stringify(todayItems));
-      }
 
       console.log('Updated nutrition data with fruit calories:', goals);
     } catch (error) {
@@ -127,8 +126,8 @@ export default function ResultsScreen() {
           const nutritionItem = nutritionData.items[0];
           setNutritionInfo(nutritionItem);
           
-          // Only update nutrition data if we successfully got nutrition info
-          await updateNutritionData(nutritionItem.calories);
+          // Update nutrition data and today's items
+          await updateNutritionData(nutritionItem);
           setError(null); // Clear any previous errors
         } else {
           setError('No nutrition information found for ' + fruitName);
